@@ -22,22 +22,27 @@ def decode_payload(encoded_payload, client):
     """
     # Decode json
     json_payload = json.loads(encoded_payload)
-    filename = json_payload["filename"]
-    position = json_payload["position"]
-    print("Received file: ", filename)
+    print("retrieving information from payload")
+    ring = json_payload["ring"]
+    muuid = json_payload["muuid"]
+    print("mmuid: ", muuid)
+    print("Received ring and muuid")
     # Get data and decode the binary content
-    bytes_json_payload = bytes(json_payload["data"], 'utf-8')
+    bytes_json_payload = bytes(json_payload["media"], 'utf-8')
+    print("Received media to decode")
     image_64_decode = base64.decodebytes(bytes_json_payload)
-    with open(filename, 'wb') as f:
+    with open("prova.jpg", 'wb') as f:
         f.write(image_64_decode)
+    print("file decoded")
     ##################################################################
     #create a response
     #json format
-    json_response = {"filename" : filename, "position" : position, "response" : 1}
+    json_response = {"ring" : ring, "muuid" : muuid, "owner" : 0, "monitored" : 0, "unknown" : 1}
     #let's convert to string
     payload = json.dumps(json_response)
     client.publish("User_Consitalia_1_aws/Response", payload, qos = 1)
-    
+    print("reponse sent")    
+
 def on_connect(client, userdata, flags, rc):
     if rc==0:
         print("Connected OK: returned code: ", rc)
@@ -53,7 +58,7 @@ def on_message(client, userdata, message):
     print( "current time: ", now.strftime("%d/%m/%Y %H:%M:%S") )
     decode_payload(message.payload, client)
 
-client = mqtt.Client("python-client", userdata={})
+client = mqtt.Client("ai_server_emulator.py", userdata={})
 client.tls_set() 
 client.username_pw_set(MQTT_TOKEN_FLESPI, MQTT_PASS)  
 client.on_connect = on_connect
